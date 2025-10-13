@@ -8,16 +8,20 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         primaryKey: true,
       },
-      name: {
+      firstName: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      user_bio: {
-        type: Sequelize.TEXT,
+      lastName: {
+        type: Sequelize.STRING,
         allowNull: true,
         set(value) {
-          this.setDataValue("user_bio", value === "" ? null : value);
+          this.setDataValue("lastName", value === "" ? null : value);
         },
+      },
+      username: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       email: {
         type: Sequelize.STRING,
@@ -25,10 +29,6 @@ module.exports = (sequelize, Sequelize) => {
         set(value) {
           this.setDataValue("email", value === "" ? null : value);
         },
-      },
-      username: {
-        type: Sequelize.STRING,
-        allowNull: false,
       },
       mobilePrefix: {
         type: Sequelize.STRING,
@@ -44,11 +44,32 @@ module.exports = (sequelize, Sequelize) => {
           this.setDataValue("mobileNumber", value === "" ? null : value);
         },
       },
+      user_bio: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        set(value) {
+          this.setDataValue("user_bio", value === "" ? null : value);
+        },
+      },
       otp: {
         type: Sequelize.STRING,
         allowNull: true,
         set(value) {
           this.setDataValue("otp", value === "" ? null : value);
+        },
+      },
+      otpExpiry: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        set(value) {
+          this.setDataValue("otpExpiry", value === "" ? null : value);
+        },
+      },
+      profilePicture: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        set(value) {
+          this.setDataValue("profilePicture", value === "" ? null : value);
         },
       },
       isMobileVerified: {
@@ -65,6 +86,10 @@ module.exports = (sequelize, Sequelize) => {
         set(value) {
           this.setDataValue("last_login", value === "" ? null : value);
         },
+      },
+      agreed: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       isDeleted: {
         type: Sequelize.BOOLEAN,
