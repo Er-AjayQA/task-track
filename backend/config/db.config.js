@@ -1,4 +1,4 @@
-module.exports = {
+const dbConfig = {
   HOST: "127.0.0.1",
   USER: "root",
   PASSWORD: "ajay@2681993#",
@@ -15,7 +15,7 @@ module.exports = {
   },
 };
 
-// module.exports = {
+// const dbConfig = {
 //   HOST: "127.0.0.1",
 //   USER: "root",
 //   PASSWORD: "nayra2024",
@@ -31,3 +31,5 @@ module.exports = {
 //     idle: 10000,
 //   },
 // };
+
+module.exports = dbConfig;

@@ -1,6 +1,6 @@
 // ***************** Imports ***************** //
-import dbConfig from "./db.config";
-import { Sequelize } from "sequelize";
+const dbConfig = require("./db.config");
+const Sequelize = require("sequelize");
 
 // ***************** DB Config ***************** //
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
@@ -19,6 +19,11 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // ***************** Define Models ***************** //
+// User Master Model
+db.um_user_master = require("../api/userManagement/model/user.model")(
+  sequelize,
+  Sequelize
+);
 
 // ***************** Models Relations ***************** //
 
