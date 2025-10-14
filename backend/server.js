@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const db = require("./config/index.js");
 
 // ***************** Import Routes ***************** //
+const userRoutes = require("./api/userManagement/router/user.router.js");
 
 // ***************** Configs ***************** //
 dotenv.config();
@@ -15,6 +16,7 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/v1", userRoutes);
 
 // ***************** DB Sync ***************** //
 // db.sequelize
