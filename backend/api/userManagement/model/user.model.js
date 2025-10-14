@@ -22,10 +22,14 @@ module.exports = (sequelize, Sequelize) => {
       username: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: true,
       },
       email: {
         type: Sequelize.STRING,
         allowNull: true,
+        validate: {
+          isEmail: true,
+        },
         set(value) {
           this.setDataValue("email", value === "" ? null : value);
         },
@@ -43,6 +47,10 @@ module.exports = (sequelize, Sequelize) => {
         set(value) {
           this.setDataValue("mobileNumber", value === "" ? null : value);
         },
+      },
+      password: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       user_bio: {
         type: Sequelize.TEXT,
@@ -72,6 +80,10 @@ module.exports = (sequelize, Sequelize) => {
           this.setDataValue("profilePicture", value === "" ? null : value);
         },
       },
+      isLoginVerified: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
       isMobileVerified: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
@@ -80,14 +92,14 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
-      last_login: {
+      lastLogin: {
         type: Sequelize.DATE,
         allowNull: true,
         set(value) {
-          this.setDataValue("last_login", value === "" ? null : value);
+          this.setDataValue("lastLogin", value === "" ? null : value);
         },
       },
-      agreed: {
+      agreedToTerms: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
@@ -100,7 +112,19 @@ module.exports = (sequelize, Sequelize) => {
         defaultValue: true,
       },
     },
-    { freezeTableName: true }
+    {
+      freezeTableName: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ["email"],
+        },
+        {
+          unique: true,
+          fields: ["mobileNumber"],
+        },
+      ],
+    }
   );
   return um_user_master;
 };
