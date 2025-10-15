@@ -2,11 +2,11 @@
 const otpHtmlFormat = (otp) => {
   return `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-      <h2 style="color: #075e54;">🔐 PingMe Web Verification</h2>
+      <h2 style="color: #075e54;">🔐 TaskTracker Web Verification</h2>
       
       <p>Hi there,</p>
       
-      <p>Your one-time password (OTP) to verify your PingMe Web account is:</p>
+      <p>Your one-time password (OTP) to verify your TaskTracker Web account is:</p>
       
       <h1 style="background: #e0f7fa; color: #000; padding: 10px 20px; display: inline-block; border-radius: 5px; letter-spacing: 2px;">
         ${otp}
@@ -16,7 +16,7 @@ const otpHtmlFormat = (otp) => {
 
       <p>If you didn’t request this OTP, please ignore this email.</p>
 
-      <p style="margin-top: 20px;">Thanks & Regards,<br/>PingMe Web Security Team</p>
+      <p style="margin-top: 20px;">Thanks & Regards,<br/>TaskTracker Web Security Team</p>
 
       <hr style="margin: 30px 0;" />
 
