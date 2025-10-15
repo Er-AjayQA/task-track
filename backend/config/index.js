@@ -24,6 +24,11 @@ db.um_user_master = require("../api/userManagement/model/user.model")(
   sequelize,
   Sequelize
 );
+// Login History Master Model
+db.um_login_history = require("../api/userManagement/model/login.model")(
+  sequelize,
+  Sequelize
+);
 
 // ***************** Models Relations ***************** //
 
