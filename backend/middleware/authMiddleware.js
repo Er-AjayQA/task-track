@@ -10,6 +10,8 @@ const authMiddleware = async (req, res, next) => {
     return response(res, 401, "Authorization token missing");
   }
 
+  console.log(".........................TOKEN", authToken);
+
   try {
     const decode = jwt.verify(authToken, process.env.JWT_SECRETE);
 
