@@ -8,7 +8,8 @@ export const SignUpPage = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [signupType, setSignupType] = useState("email"); // 'password' or 'otp'
+  const [usernameAvailable, setUsernameAvailable] = useState(false);
+  const [signupType, setSignupType] = useState("email");
 
   const handleLogin = async (formData) => {
     setLoading(true);
@@ -16,6 +17,16 @@ export const SignUpPage = () => {
 
     try {
       let response;
+      let formData = {
+        username: formData.username,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        mobileNumber: formData.mobileNumber,
+        mobilePrefix: formData.mobilePrefix,
+        email: formData.email,
+        password: formData.password,
+        signupType,
+      };
 
       if (signupType === "email") {
         response = await authServices.loginWithPassword(formData);
@@ -48,6 +59,8 @@ export const SignUpPage = () => {
           error={error}
           signupType={signupType}
           setSignupType={setSignupType}
+          usernameAvailable={usernameAvailable}
+          setUsernameAvailable={setUsernameAvailable}
         />
         <p>
           Already have an account?

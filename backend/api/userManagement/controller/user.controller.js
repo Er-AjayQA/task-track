@@ -26,7 +26,10 @@ module.exports.checkUsernameAvailability = async (req, res) => {
       return response(res, 309, "Username already taken!");
     } else {
       await transaction.commit();
-      return response(res, 200, "Username available!");
+
+      let resData = response(res, 200, "Username available!");
+      console.log("RESPONSE DATA>>>", resData);
+      return resData;
     }
   } catch (error) {
     console.error(error);
