@@ -1,35 +1,76 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { AuthProvider } from "./context/authContext";
+import { Route, Routes } from "react-router-dom";
+import { LoginPage } from "./pages/authPages/loginPage";
+import { PublicRoutes } from "./routes/publicRoutes";
+import { DashboardPage } from "./pages/dashboardPage";
+import { ProtectedRoutes } from "./routes/protectedRoutes";
+import { PageNotFoundPage } from "./pages/pageNotFoundPage";
+import { SignUpPage } from "./pages/authPages/signupPage";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <AuthProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/task-track/login"
+          element={
+            <PublicRoutes>
+              <LoginPage />
+            </PublicRoutes>
+          }
+        />
+
+        <Route
+          path="/task-track/signup"
+          element={
+            <PublicRoutes>
+              <SignUpPage />
+            </PublicRoutes>
+          }
+        />
+
+        <Route
+          path="/task-track/*"
+          element={
+            <PublicRoutes>
+              <PageNotFoundPage />
+            </PublicRoutes>
+          }
+        />
+
+        {/* Protected Routes */}
+        <Route
+          path="/task-track/"
+          element={
+            <ProtectedRoutes>
+              <DashboardPage />
+            </ProtectedRoutes>
+          }
+        />
+
+        <Route
+          path="/task-track/dashboard"
+          element={
+            <ProtectedRoutes>
+              <DashboardPage />
+            </ProtectedRoutes>
+          }
+        />
+
+        <Route
+          path="/task-track/*"
+          element={
+            <ProtectedRoutes>
+              <PageNotFoundPage />
+            </ProtectedRoutes>
+          }
+        />
+      </Routes>
+    </AuthProvider>
+  );
 }
 
-export default App
+// *********** Exports *********** //
+export default App;

@@ -3,7 +3,7 @@ import { useAuth } from "../context/authContext";
 import { Navigate, useLocation } from "react-router-dom";
 
 // *********** Protected Route Component *********** //
-const ProtectedRoutes = ({ children }) => {
+export const ProtectedRoutes = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -16,11 +16,10 @@ const ProtectedRoutes = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <Navigate to="/task-track/login" state={{ from: location }} replace />
+    );
   }
 
   return children;
 };
-
-// *********** Exports *********** //
-export default ProtectedRoutes;
