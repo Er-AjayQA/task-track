@@ -1,3 +1,4 @@
+// *********** Imports *********** //
 import "./App.css";
 import { AuthProvider } from "./context/authContext";
 import { Route, Routes } from "react-router-dom";

@@ -1,5 +1,11 @@
 // ***************** Imports ***************** //
-const response = async (res, statusCode, message, data = null) => {
+const response = async (
+  res,
+  statusCode,
+  successStatus,
+  message,
+  data = null
+) => {
   try {
     if (!res) {
       console.error("Response object is null!");
@@ -8,6 +14,7 @@ const response = async (res, statusCode, message, data = null) => {
 
     const responseObject = {
       status: statusCode,
+      success: successStatus,
       message,
       data,
     };

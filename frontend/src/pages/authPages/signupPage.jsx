@@ -1,14 +1,17 @@
+// *********** Imports *********** //
 import { useState } from "react";
 import { useAuth } from "../../context/authContext";
 import { authServices } from "../../services/authService";
 import { Link } from "react-router-dom";
 import { SignupForm } from "../../components/authComponents/signupForm";
+import { toast } from "react-toastify";
 
 export const SignUpPage = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [usernameAvailable, setUsernameAvailable] = useState(false);
+  const [isPasswordMatching, setIsPasswordMatching] = useState(false);
   const [signupType, setSignupType] = useState("email");
 
   const handleLogin = async (formData) => {
@@ -17,21 +20,34 @@ export const SignUpPage = () => {
 
     try {
       let response;
-      let formData = {
+
+      let payload = {
         username: formData.username,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        mobileNumber: formData.mobileNumber,
-        mobilePrefix: formData.mobilePrefix,
-        email: formData.email,
         password: formData.password,
         signupType,
       };
 
       if (signupType === "email") {
-        response = await authServices.loginWithPassword(formData);
+        payload.email = formData.email;
+      }
+
+      if (signupType === "mobile") {
+        payload.mobileNumber = formData.mobileNumber;
+        payload.mobilePrefix = formData.mobilePrefix;
+      }
+
+      if (!isPasswordMatching) {
+        setError("Password & Confirm password not matching!");
+        return;
+      }
+
+      if (!usernameAvailable) {
+        toast.error("Username already taken!");
+        return;
       } else {
-        response = await authServices.loginWithOtp(formData);
+        response = await authServices.userSignUp(payload);
       }
 
       if (response.data.success) {
@@ -61,6 +77,8 @@ export const SignUpPage = () => {
           setSignupType={setSignupType}
           usernameAvailable={usernameAvailable}
           setUsernameAvailable={setUsernameAvailable}
+          isPasswordMatching={isPasswordMatching}
+          setIsPasswordMatching={setIsPasswordMatching}
         />
         <p>
           Already have an account?

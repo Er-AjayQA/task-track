@@ -1,8 +1,9 @@
-import { useState } from "react";
+// *********** Imports *********** //
 import { useForm } from "react-hook-form";
 import { authServices } from "../../services/authService";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ImCheckmark, ImCross } from "react-icons/im";
+import { toast } from "react-toastify";
 
 export const SignupForm = ({
   onSubmit,
@@ -12,6 +13,8 @@ export const SignupForm = ({
   setSignupType,
   usernameAvailable,
   setUsernameAvailable,
+  isPasswordMatching,
+  setIsPasswordMatching,
 }) => {
   const {
     register,
@@ -21,6 +24,19 @@ export const SignupForm = ({
   } = useForm();
 
   const usernameInput = watch("username");
+  const passwordInput = watch("password");
+  const confirmPasswordInput = watch("confirmPassword");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Check is Password Matching
+  const checkPasswordMatching = (pwd, cpwd) => {
+    if (pwd === cpwd) {
+      setIsPasswordMatching(true);
+    }
+  };
+
+  // Check Password Strength
 
   // Check Username Availability Function
   const checkUsernameAvailability = async (username) => {
@@ -45,6 +61,16 @@ export const SignupForm = ({
     checkUsernameAvailability(usernameInput);
   }, [usernameInput]);
 
+  // Run check password and confirm password matching
+  useEffect(() => {
+    if (
+      passwordInput.trim().length > 0 &&
+      confirmPasswordInput.trim().length > 0
+    ) {
+      checkPasswordMatching(passwordInput, confirmPasswordInput);
+    }
+  }, [confirmPasswordInput]);
+
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
       {error && (
@@ -56,6 +82,36 @@ export const SignupForm = ({
       {/* form Body */}
       <div className="flex flex-col gap-5">
         {/* Row 1 */}
+        <div className="flex gap-10">
+          <label>Signup With:</label>
+          <div className="flex gap-5">
+            <div className="flex items-center gap-2">
+              <input
+                {...register("signupType")}
+                id="email"
+                type="radio"
+                value="email"
+                checked={signupType === "email"}
+                onChange={(e) => setSignupType(e.target.value)}
+              />
+              <label htmlFor="email">Email Id</label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                {...register("signupType")}
+                id="mobile"
+                type="radio"
+                value="mobile"
+                checked={signupType === "mobile"}
+                onChange={(e) => setSignupType(e.target.value)}
+              />
+              <label htmlFor="mobile">Mobile No.</label>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2 */}
         <div className="grow flex justify-between gap-2">
           {/* FirstName */}
           <div className="basis-[100%]">
@@ -98,66 +154,67 @@ export const SignupForm = ({
           </div>
         </div>
 
-        {/* Row 2 */}
-        <div className="grow flex justify-between gap-2">
-          {/* Mobile Prefix */}
-          <div className="basis-[20%]">
-            <label htmlFor="mobilePrefix" className="sr-only">
-              Mobile Prefix
-            </label>
-            <input
-              {...register("mobilePrefix", {
-                required: "This field is required",
-              })}
-              type="text"
-              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="+91"
-            />
-            {errors.mobilePrefix && (
-              <p className="text-red-500 text-sm mt-1 text-left">
-                {errors.mobilePrefix.message}
-              </p>
-            )}
-          </div>
-
-          {/* Mobile Number */}
-          <div className="basis-[100%]">
-            <label htmlFor="mobileNumber" className="sr-only">
-              Mobile Number
-            </label>
-            <input
-              {...register("mobileNumber", {
-                required: "This field is required",
-              })}
-              type="text"
-              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Mobile no..."
-            />
-            {errors.mobileNumber && (
-              <p className="text-red-500 text-sm mt-1 text-left">
-                {errors.mobileNumber.message}
-              </p>
-            )}
-          </div>
-        </div>
-
         {/* Row 3 */}
-        <div>
-          <label htmlFor="email" className="sr-only">
-            EmailId
-          </label>
-          <input
-            {...register("email", { required: "email is required" })}
-            type="email"
-            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Email Id..."
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1 text-left">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
+        {signupType === "email" ? (
+          <div>
+            <label htmlFor="email" className="sr-only">
+              EmailId
+            </label>
+            <input
+              {...register("email", { required: "email is required" })}
+              type="email"
+              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Email Id..."
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1 text-left">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="grow flex justify-between gap-2">
+            {/* Mobile Prefix */}
+            <div className="basis-[20%]">
+              <label htmlFor="mobilePrefix" className="sr-only">
+                Mobile Prefix
+              </label>
+              <input
+                {...register("mobilePrefix", {
+                  required: "This field is required",
+                })}
+                type="text"
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="+91"
+              />
+              {errors.mobilePrefix && (
+                <p className="text-red-500 text-sm mt-1 text-left">
+                  {errors.mobilePrefix.message}
+                </p>
+              )}
+            </div>
+
+            {/* Mobile Number */}
+            <div className="basis-[100%]">
+              <label htmlFor="mobileNumber" className="sr-only">
+                Mobile Number
+              </label>
+              <input
+                {...register("mobileNumber", {
+                  required: "This field is required",
+                })}
+                type="text"
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Mobile no..."
+              />
+              {errors.mobileNumber && (
+                <p className="text-red-500 text-sm mt-1 text-left">
+                  {errors.mobileNumber.message}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Row 4 */}
         <div>
@@ -165,29 +222,36 @@ export const SignupForm = ({
             Username
           </label>
           <div className="flex items-center gap-2">
-            <input
-              {...register("username", {
-                required: "Username is required",
-              })}
-              type="text"
-              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Username..."
-            />
-            {errors.username && (
-              <p className="text-red-500 text-sm mt-1 text-left">
-                {errors.username.message}
-              </p>
-            )}
-
-            {usernameInput && usernameInput.trim().length > 0 && (
-              <>
-                {usernameAvailable ? (
-                  <ImCheckmark fill="green" />
-                ) : (
-                  <ImCross fill="red" />
-                )}
-              </>
-            )}
+            <div
+              className={`${
+                usernameInput ? "basis-[95%]" : "basis-[100%]"
+              }  flex flex-col`}
+            >
+              <input
+                {...register("username", {
+                  required: "Username is required",
+                })}
+                type="text"
+                className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Username..."
+              />
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1 text-left">
+                  {errors.username.message}
+                </p>
+              )}
+            </div>
+            <div>
+              {usernameInput && usernameInput.trim().length > 0 && (
+                <>
+                  {usernameAvailable ? (
+                    <ImCheckmark fill="green" />
+                  ) : (
+                    <ImCross fill="red" />
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -227,36 +291,6 @@ export const SignupForm = ({
               {errors.confirmPassword.message}
             </p>
           )}
-        </div>
-
-        {/* Row 7 */}
-        <div className="flex gap-10">
-          <label>Signup With:</label>
-          <div className="flex gap-5">
-            <div className="flex items-center gap-2">
-              <input
-                {...register("signupType")}
-                id="email"
-                type="radio"
-                value="email"
-                checked={signupType === "email"}
-                onChange={(e) => setSignupType(e.target.value)}
-              />
-              <label htmlFor="email">Email Id</label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                {...register("signupType")}
-                id="mobile"
-                type="radio"
-                value="mobile"
-                checked={signupType === "mobile"}
-                onChange={(e) => setSignupType(e.target.value)}
-              />
-              <label htmlFor="mobile">Mobile No.</label>
-            </div>
-          </div>
         </div>
       </div>
 
