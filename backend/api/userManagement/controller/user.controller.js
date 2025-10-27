@@ -23,18 +23,18 @@ module.exports.checkUsernameAvailability = async (req, res) => {
     });
     if (user) {
       await transaction.rollback();
-      return response(res, 309, "Username already taken!");
+      return response(res, 309, false, "Username already taken!");
     } else {
       await transaction.commit();
 
-      let resData = response(res, 200, "Username available!");
+      let resData = response(res, 200, true, "Username available!");
       console.log("RESPONSE DATA>>>", resData);
       return resData;
     }
   } catch (error) {
     console.error(error);
     await transaction.rollback();
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };
 
@@ -61,7 +61,7 @@ module.exports.userSignup = async (req, res) => {
 
     if (checkUsernameExistence) {
       await transaction.rollback();
-      return response(res, 309, "Username already taken!");
+      return response(res, 309, false, "Username already taken!");
     }
 
     let otp = await generateOtp();
@@ -70,7 +70,7 @@ module.exports.userSignup = async (req, res) => {
     if (signupType === "email") {
       if (!email) {
         await transaction.rollback();
-        return response(res, 400, "EmailId is required!");
+        return response(res, 400, true, "EmailId is required!");
       }
 
       if (email) {
@@ -81,7 +81,7 @@ module.exports.userSignup = async (req, res) => {
 
         if (user) {
           await transaction.rollback();
-          return response(res, 309, "EmailId already registered!");
+          return response(res, 309, true, "EmailId already registered!");
         }
 
         const hashedPassword = await bcrypt.hash(password, 12); // Hashing password
@@ -101,14 +101,14 @@ module.exports.userSignup = async (req, res) => {
 
         await sendOtpToEmail(email, otp); // Sending OTP
         await transaction.commit();
-        return response(res, 201, "Otp sent successfully!");
+        return response(res, 201, true, "Otp sent successfully!");
       }
     }
 
     if (signupType === "mobile") {
       if (!mobileNumber || !mobilePrefix) {
         await transaction.rollback();
-        return response(res, 400, "Mobile number is required!");
+        return response(res, 400, false, "Mobile number is required!");
       }
 
       if (mobileNumber || mobilePrefix) {
@@ -120,7 +120,7 @@ module.exports.userSignup = async (req, res) => {
 
         if (user) {
           await transaction.rollback();
-          return response(res, 309, "Mobile number already registered!");
+          return response(res, 309, false, "Mobile number already registered!");
         }
 
         const hashedPassword = await bcrypt.hash(password, 12); // Hashing password
@@ -141,13 +141,13 @@ module.exports.userSignup = async (req, res) => {
 
         await sendOtpToPhoneNumber(phoneNumber); // Sending OTP
         await transaction.commit();
-        return response(res, 201, "Otp sent successfully!");
+        return response(res, 201, true, "Otp sent successfully!");
       }
     }
   } catch (error) {
     console.error(error);
     await transaction.rollback();
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };
 
@@ -170,7 +170,7 @@ module.exports.sendOtp = async (req, res) => {
 
     if (!user) {
       await transaction.rollback();
-      return response(res, 404, "User not found!");
+      return response(res, 404, false, "User not found!");
     }
 
     if (email) {
@@ -179,7 +179,7 @@ module.exports.sendOtp = async (req, res) => {
       await user.save({ transaction }); // Saving the OTP and expiry at DB
       await sendOtpToEmail(email, otp); // Sending OTP
       await transaction.commit();
-      return response(res, 201, "OTP sent successfully");
+      return response(res, 201, true, "OTP sent successfully");
     }
 
     if (mobileNumber || mobilePrefix) {
@@ -189,12 +189,12 @@ module.exports.sendOtp = async (req, res) => {
       await user.save({ transaction }); // Saving the OTP and expiry at DB
       await sendOtpToPhoneNumber(phoneNumber); // Sending OTP
       await transaction.commit();
-      return response(res, 201, "OTP sent successfully");
+      return response(res, 201, true, "OTP sent successfully");
     }
   } catch (error) {
     console.error(error);
     await transaction.rollback();
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };
 
@@ -213,7 +213,7 @@ module.exports.resendOtp = async (req, res) => {
 
       if (!user) {
         await transaction.rollback();
-        return response(res, 404, "User not found!");
+        return response(res, 404, false, "User not found!");
       }
 
       user.otp = otp;
@@ -221,7 +221,7 @@ module.exports.resendOtp = async (req, res) => {
       await user.save({ transaction }); // Saving the OTP and expiry at DB
       await sendOtpToEmail(email, otp); // Sending OTP
       await transaction.commit();
-      return response(res, 201, "OTP sent successfully");
+      return response(res, 201, true, "OTP sent successfully");
     }
 
     if (mobileNumber || mobilePrefix) {
@@ -233,7 +233,7 @@ module.exports.resendOtp = async (req, res) => {
 
       if (!user) {
         await transaction.rollback();
-        return response(res, 404, "User not found!");
+        return response(res, 404, false, "User not found!");
       }
 
       user.otp = otp;
@@ -241,7 +241,7 @@ module.exports.resendOtp = async (req, res) => {
       await user.save({ transaction }); // Saving the OTP and expiry at DB
       await sendOtpToPhoneNumber(phoneNumber); // Sending OTP
       await transaction.commit();
-      return response(res, 201, "OTP sent successfully");
+      return response(res, 201, true, "OTP sent successfully");
     }
   } catch (error) {
     console.error(error);
@@ -264,7 +264,7 @@ module.exports.loginOtpVerification = async (req, res) => {
 
       if (!user) {
         await transaction.rollback();
-        return response(res, 404, "User not found!");
+        return response(res, 404, false, "User not found!");
       }
 
       const currentDate = new Date(); // Get current Dates
@@ -275,7 +275,7 @@ module.exports.loginOtpVerification = async (req, res) => {
         currentDate > new Date(user.otpExpiry)
       ) {
         await transaction.rollback();
-        return response(res, 400, "Invalid or expired otp!");
+        return response(res, 400, false, "Invalid or expired otp!");
       }
 
       user.otp = null;
@@ -295,13 +295,13 @@ module.exports.loginOtpVerification = async (req, res) => {
 
       if (!user) {
         await transaction.rollback();
-        return response(res, 404, "User not registered!");
+        return response(res, 404, false, "User not registered!");
       }
       const result = await verifyOtp(phoneNumber, otp);
 
       if (result.status !== "approved") {
         await transaction.rollback();
-        return response(res, 400, "Invalid otp");
+        return response(res, 400, false, "Invalid otp");
       }
 
       user.otp = null;
@@ -316,10 +316,10 @@ module.exports.loginOtpVerification = async (req, res) => {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 365,
     });
-    return response(res, 201, "Login successfully", { token, user });
+    return response(res, 201, true, "Login successfully", { token, user });
   } catch (error) {
     console.error(error);
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };
 
@@ -336,7 +336,7 @@ module.exports.signupOtpVerification = async (req, res) => {
 
       if (!user) {
         await transaction.rollback();
-        return response(res, 404, "User not found!");
+        return response(res, 404, false, "User not found!");
       }
 
       const currentDate = new Date(); // Get current Dates
@@ -347,7 +347,7 @@ module.exports.signupOtpVerification = async (req, res) => {
         currentDate > new Date(user.otpExpiry)
       ) {
         await transaction.rollback();
-        return response(res, 400, "Invalid or expired otp!");
+        return response(res, 400, false, "Invalid or expired otp!");
       }
 
       await db.um_user_master.update(
@@ -361,7 +361,7 @@ module.exports.signupOtpVerification = async (req, res) => {
       );
 
       await transaction.commit();
-      return response(res, 201, "Signup successfully!");
+      return response(res, 201, true, "Signup successfully!");
     }
 
     // If mobile number provided
@@ -374,13 +374,13 @@ module.exports.signupOtpVerification = async (req, res) => {
 
       if (!user) {
         await transaction.rollback();
-        return response(res, 404, "User not registered!");
+        return response(res, 404, false, "User not registered!");
       }
       const result = await verifyOtp(phoneNumber, otp);
 
       if (result.status !== "approved") {
         await transaction.rollback();
-        return response(res, 400, "Invalid otp");
+        return response(res, 400, false, "Invalid otp");
       }
 
       await db.um_user_master.update(
@@ -394,12 +394,12 @@ module.exports.signupOtpVerification = async (req, res) => {
       );
 
       await transaction.commit();
-      return response(res, 201, "Signup successfully!");
+      return response(res, 201, true, "Signup successfully!");
     }
   } catch (error) {
     console.error(error);
     await transaction.rollback();
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };
 
@@ -419,7 +419,7 @@ module.exports.otpVerification = async (req, res) => {
 
     if (!user) {
       await transaction.rollback();
-      return response(res, 404, "User not found!");
+      return response(res, 404, false, "User not found!");
     }
 
     // If emailId provided
@@ -433,7 +433,7 @@ module.exports.otpVerification = async (req, res) => {
         currentDate > new Date(user.otpExpiry)
       ) {
         await transaction.rollback();
-        return response(res, 400, "Invalid or expired otp!");
+        return response(res, 400, false, "Invalid or expired otp!");
       }
 
       await db.um_user_master.update(
@@ -447,7 +447,7 @@ module.exports.otpVerification = async (req, res) => {
       );
 
       await transaction.commit();
-      return response(res, 201, "Email verified successfully!");
+      return response(res, 201, true, "Email verified successfully!");
     }
 
     // If mobile number provided
@@ -457,7 +457,7 @@ module.exports.otpVerification = async (req, res) => {
 
       if (result.status !== "approved") {
         await transaction.rollback();
-        return response(res, 400, "Invalid otp");
+        return response(res, 400, false, "Invalid otp");
       }
 
       await db.um_user_master.update(
@@ -472,12 +472,12 @@ module.exports.otpVerification = async (req, res) => {
       );
 
       await transaction.commit();
-      return response(res, 201, "Mobile number verified successfully!");
+      return response(res, 201, true, "Mobile number verified successfully!");
     }
   } catch (error) {
     console.error(error);
     await transaction.rollback();
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };
 
@@ -512,14 +512,14 @@ module.exports.loginWithPassword = async (req, res) => {
 
     if (!user) {
       await transaction.rollback();
-      return response(res, 404, "User not found!");
+      return response(res, 404, false, "User not found!");
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password); // Comparing password
 
     if (!isPasswordValid) {
       await transaction.rollback();
-      return response(res, 400, "Invalid credentials!");
+      return response(res, 400, false, "Invalid credentials!");
     }
 
     token = await generateToken(user.id); // Saving token
@@ -528,10 +528,10 @@ module.exports.loginWithPassword = async (req, res) => {
       maxAge: 1000 * 60 * 60 * 24 * 365,
     });
     await transaction.commit();
-    return response(res, 201, "Login successfully", { token, user });
+    return response(res, 201, true, "Login successfully", { token, user });
   } catch (error) {
     console.error(error);
     await transaction.rollback();
-    return response(res, 500, "Internal server error");
+    return response(res, 500, false, "Internal server error");
   }
 };

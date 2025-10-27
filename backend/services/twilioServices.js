@@ -16,6 +16,8 @@ const sendOtpToPhoneNumber = async (phoneNumber) => {
       throw new Error("Phone number is required!");
     }
 
+    console.log(phoneNumber);
+
     const response = await client.verify.v2
       .services(serviceSid)
       .verifications.create({ to: phoneNumber, channel: "sms" });
