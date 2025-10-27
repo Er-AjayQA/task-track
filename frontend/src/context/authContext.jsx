@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // *********** Imports *********** //
 import { createContext, useContext, useEffect, useState } from "react";
 import { authServices } from "../services/authService";
@@ -5,7 +6,7 @@ import { authServices } from "../services/authService";
 // *********** Creating Auth Context *********** //
 const AuthContext = createContext();
 
-export const useAuth = () => {
+const useAuth = () => {
   const context = useContext(AuthContext);
 
   if (!context) {
@@ -15,7 +16,7 @@ export const useAuth = () => {
 };
 
 // *********** Creating Auth Provider *********** //
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -65,3 +66,5 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export { useAuth, AuthProvider };
