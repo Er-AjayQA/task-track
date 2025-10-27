@@ -1,4 +1,8 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { authServices } from "../../services/authService";
+import { useEffect } from "react";
+import { ImCheckmark, ImCross } from "react-icons/im";
 
 export const SignupForm = ({
   onSubmit,
@@ -6,12 +10,40 @@ export const SignupForm = ({
   error,
   signupType,
   setSignupType,
+  usernameAvailable,
+  setUsernameAvailable,
 }) => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm();
+
+  const usernameInput = watch("username");
+
+  // Check Username Availability Function
+  const checkUsernameAvailability = async (username) => {
+    if (!username || username.trim().length === 0) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    try {
+      const response = await authServices.checkUserName(username);
+      response.status === 200
+        ? setUsernameAvailable(true)
+        : setUsernameAvailable(false);
+    } catch (error) {
+      setUsernameAvailable(false);
+      console.log(error);
+    }
+  };
+
+  // Run check username availability on typing in username input field
+  useEffect(() => {
+    checkUsernameAvailability(usernameInput);
+  }, [usernameInput]);
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -21,7 +53,9 @@ export const SignupForm = ({
         </div>
       )}
 
+      {/* form Body */}
       <div className="flex flex-col gap-5">
+        {/* Row 1 */}
         <div className="grow flex justify-between gap-2">
           {/* FirstName */}
           <div className="basis-[100%]">
@@ -34,7 +68,7 @@ export const SignupForm = ({
               })}
               type="text"
               className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter firstname..."
+              placeholder="Firstname..."
             />
             {errors.firstName && (
               <p className="text-red-500 text-sm mt-1 text-left">
@@ -54,7 +88,7 @@ export const SignupForm = ({
               })}
               type="text"
               className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter lastname..."
+              placeholder="Lastname..."
             />
             {errors.lastName && (
               <p className="text-red-500 text-sm mt-1 text-left">
@@ -64,6 +98,7 @@ export const SignupForm = ({
           </div>
         </div>
 
+        {/* Row 2 */}
         <div className="grow flex justify-between gap-2">
           {/* Mobile Prefix */}
           <div className="basis-[20%]">
@@ -96,7 +131,7 @@ export const SignupForm = ({
               })}
               type="text"
               className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter mobileNo...."
+              placeholder="Mobile no..."
             />
             {errors.mobileNumber && (
               <p className="text-red-500 text-sm mt-1 text-left">
@@ -106,6 +141,7 @@ export const SignupForm = ({
           </div>
         </div>
 
+        {/* Row 3 */}
         <div>
           <label htmlFor="email" className="sr-only">
             EmailId
@@ -114,7 +150,7 @@ export const SignupForm = ({
             {...register("email", { required: "email is required" })}
             type="email"
             className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter emailId..."
+            placeholder="Email Id..."
           />
           {errors.email && (
             <p className="text-red-500 text-sm mt-1 text-left">
@@ -123,6 +159,39 @@ export const SignupForm = ({
           )}
         </div>
 
+        {/* Row 4 */}
+        <div>
+          <label htmlFor="username" className="sr-only">
+            Username
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              {...register("username", {
+                required: "Username is required",
+              })}
+              type="text"
+              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Username..."
+            />
+            {errors.username && (
+              <p className="text-red-500 text-sm mt-1 text-left">
+                {errors.username.message}
+              </p>
+            )}
+
+            {usernameInput && usernameInput.trim().length > 0 && (
+              <>
+                {usernameAvailable ? (
+                  <ImCheckmark fill="green" />
+                ) : (
+                  <ImCross fill="red" />
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Row 5 */}
         <div>
           <label htmlFor="password" className="sr-only">
             Password
@@ -140,6 +209,7 @@ export const SignupForm = ({
           )}
         </div>
 
+        {/* Row 6 */}
         <div>
           <label htmlFor="confirmPassword" className="sr-only">
             Confirm Password
@@ -158,31 +228,37 @@ export const SignupForm = ({
             </p>
           )}
         </div>
-      </div>
 
-      {signupType === "mobile" && (
-        <div>
-          <label htmlFor="otp" className="sr-only">
-            OTP
-          </label>
-          <input
-            {...register("otp", {
-              required: "OTP is required",
-              pattern: {
-                value: /^\d{6}$/,
-                message: "OTP must be 6 digits",
-              },
-            })}
-            type="text"
-            maxLength="6"
-            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter OTP"
-          />
-          {errors.otp && (
-            <p className="text-red-500 text-sm mt-1">{errors.otp.message}</p>
-          )}
+        {/* Row 7 */}
+        <div className="flex gap-10">
+          <label>Signup With:</label>
+          <div className="flex gap-5">
+            <div className="flex items-center gap-2">
+              <input
+                {...register("signupType")}
+                id="email"
+                type="radio"
+                value="email"
+                checked={signupType === "email"}
+                onChange={(e) => setSignupType(e.target.value)}
+              />
+              <label htmlFor="email">Email Id</label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                {...register("signupType")}
+                id="mobile"
+                type="radio"
+                value="mobile"
+                checked={signupType === "mobile"}
+                onChange={(e) => setSignupType(e.target.value)}
+              />
+              <label htmlFor="mobile">Mobile No.</label>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
 
       <div>
         <button

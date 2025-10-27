@@ -4,7 +4,6 @@ import axios from "axios";
 // *********** Config Axios *********** //
 const API = axios.create({
   baseURL: "http://localhost:8000/api/v1",
-  withCredentials: true,
 });
 
 // *********** Interceptor to Add Auth Token *********** //
