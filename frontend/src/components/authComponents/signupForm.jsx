@@ -1,9 +1,14 @@
+/* eslint-disable no-useless-escape */
 // *********** Imports *********** //
 import { useForm } from "react-hook-form";
 import { authServices } from "../../services/authService";
 import { useEffect, useState } from "react";
 import { ImCheckmark, ImCross } from "react-icons/im";
-import { toast } from "react-toastify";
+import { IoIosEye, IoIosEyeOff } from "react-icons/io";
+import { PasswordProgressBar } from "./passwordProgressBar";
+import { FaRegCircleQuestion } from "react-icons/fa6";
+import { PasswordRuleTooltip } from "./passwordRuleTooltip";
+import { Link } from "react-router-dom";
 
 export const SignupForm = ({
   onSubmit,
@@ -13,8 +18,6 @@ export const SignupForm = ({
   setSignupType,
   usernameAvailable,
   setUsernameAvailable,
-  isPasswordMatching,
-  setIsPasswordMatching,
 }) => {
   const {
     register,
@@ -25,18 +28,12 @@ export const SignupForm = ({
 
   const usernameInput = watch("username");
   const passwordInput = watch("password");
-  const confirmPasswordInput = watch("confirmPassword");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // Check is Password Matching
-  const checkPasswordMatching = (pwd, cpwd) => {
-    if (pwd === cpwd) {
-      setIsPasswordMatching(true);
-    }
-  };
-
-  // Check Password Strength
+  const [passwordStrengthValue, setPasswordStrengthValue] = useState(null);
+  const [progressColor, setProgressColor] = useState("red");
+  const [progressCount, setProgressCount] = useState(0);
+  const [showPasswordRules, setShowPasswordRules] = useState(false);
 
   // Check Username Availability Function
   const checkUsernameAvailability = async (username) => {
@@ -56,20 +53,108 @@ export const SignupForm = ({
     }
   };
 
+  // Check password Strength
+  const checkPasswordStrength = (pwd) => {
+    if (!pwd || pwd.trim().length <= 0) {
+      setPasswordStrengthValue(null);
+      setProgressColor("gray");
+      setProgressCount(0);
+      return;
+    }
+
+    const password = pwd.trim();
+
+    // Character type checks
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumbers = /[0-9]/.test(password);
+    const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(
+      password
+    );
+
+    // Count character types
+    const charTypeCount = [
+      hasLowerCase,
+      hasUpperCase,
+      hasNumbers,
+      hasSpecialChars,
+    ].filter(Boolean).length;
+
+    let score = 0;
+    let strengthValue = "";
+    let color = "red";
+    let progress = 0;
+
+    // Very Weak: Only one character type OR length <= 4 with poor complexity
+    if (password.length <= 4 || charTypeCount === 1) {
+      score = 1;
+      strengthValue = "Very Weak";
+      color = "red";
+      progress = 20;
+    }
+    // Weak: Only two character types OR length <= 8 with basic complexity
+    else if (password.length <= 8 || charTypeCount === 2) {
+      score = 2;
+      strengthValue = "Weak";
+      color = "yellow";
+      progress = 40;
+    }
+    // Medium: Three character types OR length <= 12 with good complexity
+    else if (password.length <= 12 || charTypeCount === 3) {
+      score = 3;
+      strengthValue = "Medium";
+      color = "teal";
+      progress = 60;
+    }
+    // Strong: Four character types AND length > 12
+    else if (password.length <= 14 && charTypeCount === 4) {
+      score = 4;
+      strengthValue = "Strong";
+      color = "lime";
+      progress = 80;
+    }
+    // Very Strong: Four character types AND length > 14
+    else if (password.length > 14 && charTypeCount === 4) {
+      score = 5;
+      strengthValue = "Very Strong";
+      color = "green";
+      progress = 100;
+    }
+    // Fallback for edge cases
+    else {
+      // If it doesn't fit above categories but is long with good complexity
+      if (password.length > 16 && charTypeCount >= 3) {
+        score = 5;
+        strengthValue = "Very Strong";
+        color = "green";
+        progress = 100;
+      } else if (password.length > 12 && charTypeCount >= 3) {
+        score = 4;
+        strengthValue = "Strong";
+        color = "lime";
+        progress = 80;
+      } else {
+        score = 3;
+        strengthValue = "Medium";
+        color = "yellow";
+        progress = 60;
+      }
+    }
+
+    setPasswordStrengthValue(strengthValue);
+    setProgressColor(color);
+    setProgressCount(progress);
+  };
+
   // Run check username availability on typing in username input field
   useEffect(() => {
     checkUsernameAvailability(usernameInput);
   }, [usernameInput]);
 
-  // Run check password and confirm password matching
+  // Run check password strength
   useEffect(() => {
-    if (
-      passwordInput.trim().length > 0 &&
-      confirmPasswordInput.trim().length > 0
-    ) {
-      checkPasswordMatching(passwordInput, confirmPasswordInput);
-    }
-  }, [confirmPasswordInput]);
+    checkPasswordStrength(passwordInput);
+  }, [passwordInput]);
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -221,51 +306,85 @@ export const SignupForm = ({
           <label htmlFor="username" className="sr-only">
             Username
           </label>
-          <div className="flex items-center gap-2">
-            <div
-              className={`${
-                usernameInput ? "basis-[95%]" : "basis-[100%]"
-              }  flex flex-col`}
-            >
-              <input
-                {...register("username", {
-                  required: "Username is required",
-                })}
-                type="text"
-                className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Username..."
-              />
-              {errors.username && (
-                <p className="text-red-500 text-sm mt-1 text-left">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
-            <div>
+          <div className="relative">
+            <input
+              {...register("username", {
+                required: "Username is required",
+              })}
+              type="text"
+              className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
+              placeholder="Username..."
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               {usernameInput && usernameInput.trim().length > 0 && (
                 <>
                   {usernameAvailable ? (
-                    <ImCheckmark fill="green" />
+                    <ImCheckmark fill="green" className="w-4 h-4" />
                   ) : (
-                    <ImCross fill="red" />
+                    <ImCross fill="red" className="w-4 h-4" />
                   )}
                 </>
               )}
             </div>
           </div>
+          {errors.username && (
+            <p className="text-red-500 text-sm mt-1 text-left">
+              {errors.username.message}
+            </p>
+          )}
         </div>
 
-        {/* Row 5 */}
+        {/* Row 5 - Password Field with Enhanced UI */}
         <div>
-          <label htmlFor="password" className="sr-only">
-            Password
-          </label>
-          <input
-            {...register("password", { required: "Password is required" })}
-            type="password"
-            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Set password..."
-          />
+          <div className="relative">
+            <label htmlFor="password" className="sr-only">
+              Password
+            </label>
+            <input
+              {...register("password", { required: "Password is required" })}
+              type={showPassword ? "text" : "password"}
+              className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-20"
+              placeholder="Set password..."
+            />
+
+            {/* Password Help Tooltip Icon */}
+            <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+              <div className="relative">
+                <FaRegCircleQuestion
+                  className="w-4 h-4 text-gray-400 hover:text-blue-500 cursor-pointer transition-colors"
+                  onMouseEnter={() => setShowPasswordRules(true)}
+                  onMouseLeave={() => setShowPasswordRules(false)}
+                />
+              </div>
+            </div>
+            {/* Password Rules Tooltip */}
+            {showPasswordRules && <PasswordRuleTooltip />}
+
+            {/* Password Visibility Toggle */}
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {showPassword ? (
+                <IoIosEye
+                  className="cursor-pointer w-5 h-5 text-gray-400 hover:text-blue-500 transition-colors"
+                  onClick={() => setShowPassword(false)}
+                />
+              ) : (
+                <IoIosEyeOff
+                  className="cursor-pointer w-5 h-5 text-gray-400 hover:text-blue-500 transition-colors"
+                  onClick={() => setShowPassword(true)}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Password Strength Progress Bar */}
+          {progressCount > 0 && (
+            <PasswordProgressBar
+              passwordStrengthValue={passwordStrengthValue}
+              progressColor={progressColor}
+              progressCount={progressCount}
+            />
+          )}
+
           {errors.password && (
             <p className="text-red-500 text-sm mt-1 text-left">
               {errors.password.message}
@@ -278,14 +397,30 @@ export const SignupForm = ({
           <label htmlFor="confirmPassword" className="sr-only">
             Confirm Password
           </label>
-          <input
-            {...register("confirmPassword", {
-              required: "Confirm Password is required",
-            })}
-            type="password"
-            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Confirm password..."
-          />
+          <div className="relative">
+            <input
+              {...register("confirmPassword", {
+                required: "Confirm Password is required",
+              })}
+              type={showConfirmPassword ? "text" : "password"}
+              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Confirm password..."
+            />
+            {showConfirmPassword ? (
+              <IoIosEye
+                className="cursor-pointer w-5 h-5 absolute right-2 top-3"
+                fill="gray"
+                onClick={() => setShowConfirmPassword(false)}
+              />
+            ) : (
+              <IoIosEyeOff
+                className="cursor-pointer w-5 h-5 absolute right-2 top-3"
+                fill="gray"
+                onClick={() => setShowConfirmPassword(true)}
+              />
+            )}
+          </div>
+
           {errors.confirmPassword && (
             <p className="text-red-500 text-sm mt-1 text-left">
               {errors.confirmPassword.message}
@@ -298,10 +433,19 @@ export const SignupForm = ({
         <button
           type="submit"
           disabled={loading}
-          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
         >
           {loading ? "Signing up..." : "Sign up"}
         </button>
+      </div>
+
+      <div>
+        <p>
+          Already have an account?
+          <Link to="/task-track/login" className="hover:underline">
+            Click here
+          </Link>
+        </p>
       </div>
     </form>
   );
