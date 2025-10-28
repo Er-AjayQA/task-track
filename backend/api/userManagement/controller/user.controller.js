@@ -483,32 +483,24 @@ module.exports.otpVerification = async (req, res) => {
 
 // ***************** Login With Password Controller ***************** //
 module.exports.loginWithPassword = async (req, res) => {
-  const { username, mobileNumber, mobilePrefix, email, password } = req.body;
+  const { userData, password } = req.body;
   let user = "";
   let token = "";
   const transaction = await db.sequelize.transaction();
 
   try {
-    if (email) {
-      user = await db.um_user_master.findOne({
-        where: { email, isDeleted: true, status: true },
-        transaction,
-      });
-    }
-
-    if (mobileNumber || mobilePrefix) {
-      user = await db.um_user_master.findOne({
-        where: { mobileNumber, mobilePrefix, isDeleted: true, status: true },
-        transaction,
-      });
-    }
-
-    if (username) {
-      user = await db.um_user_master.findOne({
-        where: { username, isDeleted: true, status: true },
-        transaction,
-      });
-    }
+    user = await db.um_user_master.findOne({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { email: userData },
+          { username: userData },
+          { mobileNumber: userData },
+        ],
+        isDeleted: false,
+        status: true,
+      },
+      transaction,
+    });
 
     if (!user) {
       await transaction.rollback();

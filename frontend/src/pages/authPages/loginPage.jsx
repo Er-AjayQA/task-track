@@ -32,65 +32,28 @@ export const LoginPage = () => {
     clearError();
   }, [clearError]);
 
-  // Handle signup form submission
+  // Handle Login with password form submission
   const handleLoginWithPassword = async (formData) => {
     setLoading(true);
     clearError();
 
     try {
-      // Validation checks
-      if (formData.password !== formData.confirmPassword) {
-        setError("Password & Confirm password do not match!");
-        return;
-      }
-
-      if (!usernameAvailable) {
-        setError("Username is not available. Please choose another one.");
-        return;
-      }
-
       const payload = {
-        username: formData.username,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        userData: formData.userData,
         password: formData.password,
-        signupType,
       };
 
-      // Add email or mobile based on signup type
-      if (signupType === "email") {
-        if (!formData.email) {
-          setError("Email is required");
-          return;
-        }
-        payload.email = formData.email;
-        setUserEmail(formData.email);
-      }
-
-      if (signupType === "mobile") {
-        if (!formData.mobileNumber || !formData.mobilePrefix) {
-          setError("Mobile number and prefix are required");
-          return;
-        }
-        payload.mobileNumber = formData.mobileNumber;
-        payload.mobilePrefix = formData.mobilePrefix;
-        setUserMobilePrefix(formData.mobilePrefix);
-        setUserMobileNumber(formData.mobileNumber);
-      }
-
-      const response = await authServices.userSignUp(payload);
+      const response = await authServices.loginWithPassword(payload);
 
       if (response?.success) {
-        toast.success(
-          response?.message || "Signup successful! Please verify your OTP."
-        );
-        setFormType("verifyOtp");
+        toast.success(response?.message || "Login successful!.");
+        login(response?.dat?.user, response?.dat?.token);
       } else {
-        setError(response?.message || "Signup failed. Please try again.");
+        setError(response?.message || "Login failed. Please try again.");
       }
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || "Signup failed. Please try again.";
+        error.response?.data?.message || "Login failed. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -98,7 +61,7 @@ export const LoginPage = () => {
     }
   };
 
-  // Handle signup form submission
+  // Handle Login with OTP form submission
   const handleLoginWithOtp = async (formData) => {
     setLoading(true);
     clearError();
@@ -207,8 +170,8 @@ export const LoginPage = () => {
 
   // Main form submission handler
   const handleFormSubmit = async (formData) => {
-    if (formType === "signup") {
-      await handleSignup(formData);
+    if (formType === "login") {
+      await handleLoginWithPassword(formData);
     } else if (formType === "verifyOtp") {
       await handleOtpVerification(formData);
     }
