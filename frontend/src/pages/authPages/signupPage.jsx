@@ -5,14 +5,15 @@ import { authServices } from "../../services/authService";
 import { Link } from "react-router-dom";
 import { SignupForm } from "../../components/authComponents/signupForm";
 import { toast } from "react-toastify";
+import { VerifySignupOtpForm } from "../../components/authComponents/verifySignupOtpForm";
 
 export const SignUpPage = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [usernameAvailable, setUsernameAvailable] = useState(false);
-  const [isPasswordMatching, setIsPasswordMatching] = useState(false);
   const [signupType, setSignupType] = useState("email");
+  const [formType, setFormType] = useState("signup");
 
   const handleLogin = async (formData) => {
     setLoading(true);
@@ -20,38 +21,41 @@ export const SignUpPage = () => {
 
     try {
       let response;
+      let payload;
 
-      let payload = {
-        username: formData.username,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        password: formData.password,
-        signupType,
-      };
+      if (formType === "signup") {
+        payload = {
+          username: formData.username,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          password: formData.password,
+          signupType,
+        };
 
-      if (signupType === "email") {
-        payload.email = formData.email;
-      }
+        if (signupType === "email") {
+          payload.email = formData.email;
+        }
 
-      if (signupType === "mobile") {
-        payload.mobileNumber = formData.mobileNumber;
-        payload.mobilePrefix = formData.mobilePrefix;
-      }
+        if (signupType === "mobile") {
+          payload.mobileNumber = formData.mobileNumber;
+          payload.mobilePrefix = formData.mobilePrefix;
+        }
 
-      if (!isPasswordMatching) {
-        setError("Password & Confirm password not matching!");
-        return;
-      }
+        if (formData.password !== formData.confirmPassword) {
+          setError("Password & Confirm password not matching!");
+          return;
+        }
 
-      if (!usernameAvailable) {
-        toast.error("Username already taken!");
-        return;
-      } else {
-        response = await authServices.userSignUp(payload);
-      }
+        if (!usernameAvailable) {
+          toast.error("Username already taken!");
+          return;
+        } else {
+          response = await authServices.userSignUp(payload);
+        }
 
-      if (response.data.success) {
-        login(response.data.data.user, response.data.data.token);
+        if (response.data.success) {
+          login(response.data.data.user, response.data.data.token);
+        }
       }
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");
@@ -65,25 +69,29 @@ export const SignUpPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign Up to your account
+            {formType === "signup" ? "Sign Up to your account" : "Verify OTP"}
           </h2>
         </div>
 
-        <SignupForm
-          onSubmit={handleLogin}
-          loading={loading}
-          error={error}
-          signupType={signupType}
-          setSignupType={setSignupType}
-          usernameAvailable={usernameAvailable}
-          setUsernameAvailable={setUsernameAvailable}
-          isPasswordMatching={isPasswordMatching}
-          setIsPasswordMatching={setIsPasswordMatching}
-        />
-        <p>
-          Already have an account?
-          <Link to="/task-track/login"> Click here</Link>
-        </p>
+        {formType === "signup" && (
+          <SignupForm
+            onSubmit={handleLogin}
+            loading={loading}
+            error={error}
+            signupType={signupType}
+            setSignupType={setSignupType}
+            usernameAvailable={usernameAvailable}
+            setUsernameAvailable={setUsernameAvailable}
+          />
+        )}
+
+        {formType === "verifyOtp" && (
+          <VerifySignupOtpForm
+            onSubmit={handleLogin}
+            loading={loading}
+            error={error}
+          />
+        )}
       </div>
     </div>
   );
