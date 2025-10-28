@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { MdCancel } from "react-icons/md";
 import { RiErrorWarningFill } from "react-icons/ri";
 
-export const VerifySignupOtpForm = ({
+export const VerifyLoginOtpForm = ({
   onSubmit,
   loading,
   error,

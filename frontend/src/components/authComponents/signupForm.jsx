@@ -9,6 +9,7 @@ import { PasswordProgressBar } from "./passwordProgressBar";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { PasswordRuleTooltip } from "./passwordRuleTooltip";
 import { Link } from "react-router-dom";
+import { MdCancel } from "react-icons/md";
 
 export const SignupForm = ({
   onSubmit,
@@ -158,9 +159,19 @@ export const SignupForm = ({
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      {/* Error Display */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
+        <div className="rounded-md bg-red-50 p-4 border border-red-200">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <MdCancel fill="red" />
+              <h3 className="text-sm font-medium text-red-800">
+                Signup failed
+              </h3>
+            </div>
+
+            <div className="mt-1 text-sm text-red-700">{error}</div>
+          </div>
         </div>
       )}
 
@@ -437,15 +448,6 @@ export const SignupForm = ({
         >
           {loading ? "Signing up..." : "Sign up"}
         </button>
-      </div>
-
-      <div>
-        <p>
-          Already have an account?
-          <Link to="/task-track/login" className="hover:underline">
-            Click here
-          </Link>
-        </p>
       </div>
     </form>
   );

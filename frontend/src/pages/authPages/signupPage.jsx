@@ -1,8 +1,8 @@
 // *********** Imports *********** //
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "../../context/authContext";
 import { authServices } from "../../services/authService";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SignupForm } from "../../components/authComponents/signupForm";
 import { toast } from "react-toastify";
 import { VerifySignupOtpForm } from "../../components/authComponents/verifySignupOtpForm";
@@ -11,54 +11,170 @@ export const SignUpPage = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [userEmail, setUserEmail] = useState(null);
+  const [userMobilePrefix, setUserMobilePrefix] = useState(null);
+  const [userMobileNumber, setUserMobileNumber] = useState(null);
   const [usernameAvailable, setUsernameAvailable] = useState(false);
   const [signupType, setSignupType] = useState("email");
   const [formType, setFormType] = useState("signup");
+  const navigate = useNavigate();
 
-  const handleLogin = async (formData) => {
+  // Clear error messages
+  const clearError = useCallback(() => setError(""), []);
+
+  // Reset form state
+  const resetFormState = useCallback(() => {
+    setUserEmail(null);
+    setUserMobilePrefix(null);
+    setUserMobileNumber(null);
+    setUsernameAvailable(false);
+    setFormType("signup");
+    clearError();
+  }, [clearError]);
+
+  // Handle signup form submission
+  const handleSignup = async (formData) => {
     setLoading(true);
-    setError("");
+    clearError();
 
     try {
-      let response;
-      let payload;
+      // Validation checks
+      if (formData.password !== formData.confirmPassword) {
+        setError("Password & Confirm password do not match!");
+        return;
+      }
 
-      if (formType === "signup") {
-        payload = {
-          username: formData.username,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          password: formData.password,
-          signupType,
-        };
+      if (!usernameAvailable) {
+        setError("Username is not available. Please choose another one.");
+        return;
+      }
 
-        if (signupType === "email") {
-          payload.email = formData.email;
-        }
+      const payload = {
+        username: formData.username,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        password: formData.password,
+        signupType,
+      };
 
-        if (signupType === "mobile") {
-          payload.mobileNumber = formData.mobileNumber;
-          payload.mobilePrefix = formData.mobilePrefix;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-          setError("Password & Confirm password not matching!");
+      // Add email or mobile based on signup type
+      if (signupType === "email") {
+        if (!formData.email) {
+          setError("Email is required");
           return;
         }
+        payload.email = formData.email;
+        setUserEmail(formData.email);
+      }
 
-        if (!usernameAvailable) {
-          toast.error("Username already taken!");
+      if (signupType === "mobile") {
+        if (!formData.mobileNumber || !formData.mobilePrefix) {
+          setError("Mobile number and prefix are required");
           return;
-        } else {
-          response = await authServices.userSignUp(payload);
         }
+        payload.mobileNumber = formData.mobileNumber;
+        payload.mobilePrefix = formData.mobilePrefix;
+        setUserMobilePrefix(formData.mobilePrefix);
+        setUserMobileNumber(formData.mobileNumber);
+      }
 
-        if (response.data.success) {
-          login(response.data.data.user, response.data.data.token);
-        }
+      const response = await authServices.userSignUp(payload);
+
+      if (response?.success) {
+        toast.success(
+          response?.message || "Signup successful! Please verify your OTP."
+        );
+        setFormType("verifyOtp");
+      } else {
+        setError(response?.message || "Signup failed. Please try again.");
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Login failed");
+      const errorMessage =
+        error.response?.data?.message || "Signup failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle OTP verification
+  const handleOtpVerification = async (formData) => {
+    setLoading(true);
+    clearError();
+
+    try {
+      const payload = {
+        mobileNumber: userMobileNumber,
+        mobilePrefix: userMobilePrefix,
+        email: userEmail,
+        otp: formData.otp,
+      };
+
+      // Validate OTP payload
+      if (!payload.otp) {
+        setError("OTP is required");
+        return;
+      }
+
+      const response = await authServices.verifySignupOtp(payload);
+
+      if (response?.success) {
+        toast.success(response?.message || "Account verified successfully!");
+        navigate("/task-track/login", { replace: true });
+        resetFormState();
+      } else {
+        setError(
+          response?.message || "OTP verification failed. Please try again."
+        );
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "OTP verification failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Main form submission handler
+  const handleFormSubmit = async (formData) => {
+    if (formType === "signup") {
+      await handleSignup(formData);
+    } else if (formType === "verifyOtp") {
+      await handleOtpVerification(formData);
+    }
+  };
+
+  // Handle back to signup from OTP verification
+  const handleBackToSignup = () => {
+    resetFormState();
+  };
+
+  // Handle Resend Otp
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      let response = "";
+      let payload = {
+        mobileNumber: userMobileNumber,
+        mobilePrefix: userMobilePrefix,
+        email: userEmail,
+      };
+
+      response = await authServices.resendOtp(payload);
+
+      if (response?.success) {
+        toast.success(response?.message || "OTP resend successfully!");
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Can't send OTP. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -69,13 +185,34 @@ export const SignUpPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {formType === "signup" ? "Sign Up to your account" : "Verify OTP"}
+            {formType === "signup"
+              ? "Create your account"
+              : "Verify your account"}
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {formType === "signup"
+              ? "Already have an account? "
+              : "Enter the OTP sent to your "}
+            {formType === "signup" ? (
+              <Link
+                to="/task-track/login"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Sign in here
+              </Link>
+            ) : (
+              <span>
+                {signupType === "email"
+                  ? userEmail
+                  : `${userMobilePrefix}${userMobileNumber}`}
+              </span>
+            )}
+          </p>
         </div>
 
-        {formType === "signup" && (
+        {formType === "signup" ? (
           <SignupForm
-            onSubmit={handleLogin}
+            onSubmit={handleFormSubmit}
             loading={loading}
             error={error}
             signupType={signupType}
@@ -83,13 +220,18 @@ export const SignUpPage = () => {
             usernameAvailable={usernameAvailable}
             setUsernameAvailable={setUsernameAvailable}
           />
-        )}
-
-        {formType === "verifyOtp" && (
+        ) : (
           <VerifySignupOtpForm
-            onSubmit={handleLogin}
+            onSubmit={handleFormSubmit}
             loading={loading}
             error={error}
+            onBack={handleBackToSignup}
+            handleResendOtp={handleResendOtp}
+            contactInfo={
+              signupType === "email"
+                ? userEmail
+                : `${userMobilePrefix}${userMobileNumber}`
+            }
           />
         )}
       </div>
