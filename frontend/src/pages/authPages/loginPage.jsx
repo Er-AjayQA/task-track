@@ -14,7 +14,6 @@ export const LoginPage = () => {
   const [userEmail, setUserEmail] = useState(null);
   const [userMobilePrefix, setUserMobilePrefix] = useState(null);
   const [userMobileNumber, setUserMobileNumber] = useState(null);
-  const [usernameAvailable, setUsernameAvailable] = useState(false);
   const [loginType, setLoginType] = useState("password");
   const [formType, setFormType] = useState("login");
   const navigate = useNavigate();
@@ -27,8 +26,7 @@ export const LoginPage = () => {
     setUserEmail(null);
     setUserMobilePrefix(null);
     setUserMobileNumber(null);
-    setUsernameAvailable(false);
-    setFormType("signup");
+    setFormType("login");
     clearError();
   }, [clearError]);
 
@@ -47,7 +45,7 @@ export const LoginPage = () => {
 
       if (response?.success) {
         toast.success(response?.message || "Login successful!.");
-        login(response?.dat?.user, response?.dat?.token);
+        login(response?.data?.user, response?.data?.token);
       } else {
         setError(response?.message || "Login failed. Please try again.");
       }
@@ -55,7 +53,6 @@ export const LoginPage = () => {
       const errorMessage =
         error.response?.data?.message || "Login failed. Please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -67,59 +64,25 @@ export const LoginPage = () => {
     clearError();
 
     try {
-      // Validation checks
-      if (formData.password !== formData.confirmPassword) {
-        setError("Password & Confirm password do not match!");
-        return;
-      }
-
-      if (!usernameAvailable) {
-        setError("Username is not available. Please choose another one.");
-        return;
-      }
-
       const payload = {
-        username: formData.username,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        password: formData.password,
-        signupType,
+        mobilePrefix: formData?.mobilePrefix || null,
+        mobileNumber: formData?.mobileNumber || null,
+        email: formData?.email || null,
       };
 
-      // Add email or mobile based on signup type
-      if (signupType === "email") {
-        if (!formData.email) {
-          setError("Email is required");
-          return;
-        }
-        payload.email = formData.email;
-        setUserEmail(formData.email);
-      }
-
-      if (signupType === "mobile") {
-        if (!formData.mobileNumber || !formData.mobilePrefix) {
-          setError("Mobile number and prefix are required");
-          return;
-        }
-        payload.mobileNumber = formData.mobileNumber;
-        payload.mobilePrefix = formData.mobilePrefix;
-        setUserMobilePrefix(formData.mobilePrefix);
-        setUserMobileNumber(formData.mobileNumber);
-      }
-
-      const response = await authServices.userSignUp(payload);
+      const response = await authServices.sendOtp(payload);
 
       if (response?.success) {
         toast.success(
-          response?.message || "Signup successful! Please verify your OTP."
+          response?.message || "OTP sent successful! Please verify your OTP."
         );
         setFormType("verifyOtp");
       } else {
-        setError(response?.message || "Signup failed. Please try again.");
+        setError(response?.message || "Can't send OTP. Please try again.");
       }
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || "Signup failed. Please try again.";
+        error.response?.data?.message || "Login failed. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -170,9 +133,11 @@ export const LoginPage = () => {
 
   // Main form submission handler
   const handleFormSubmit = async (formData) => {
-    if (formType === "login") {
+    if (formType === "login" && loginType === "password") {
       await handleLoginWithPassword(formData);
-    } else if (formType === "verifyOtp") {
+    } else if (formType === "login" && loginType === "otp") {
+      await handleLoginWithOtp(formData);
+    } else if (formType === "verifyOtp" && loginType === "otp") {
       await handleOtpVerification(formData);
     }
   };
@@ -237,7 +202,7 @@ export const LoginPage = () => {
           </p>
         </div>
 
-        {formType === "login" ? (
+        {formType === "login" && (
           <LoginForm
             onSubmit={handleFormSubmit}
             loading={loading}
@@ -245,7 +210,9 @@ export const LoginPage = () => {
             loginType={loginType}
             setLoginType={setLoginType}
           />
-        ) : (
+        )}
+
+        {formType === "verifyOtp" && (
           <VerifyLoginOtpForm
             onSubmit={handleFormSubmit}
             loading={loading}
