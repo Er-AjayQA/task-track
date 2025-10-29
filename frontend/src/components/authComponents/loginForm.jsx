@@ -1,14 +1,8 @@
 /* eslint-disable no-useless-escape */
 // *********** Imports *********** //
 import { useForm } from "react-hook-form";
-import { authServices } from "../../services/authService";
-import { useEffect, useState } from "react";
-import { ImCheckmark, ImCross } from "react-icons/im";
+import { Activity, useEffect, useState } from "react";
 import { IoIosEye, IoIosEyeOff } from "react-icons/io";
-import { PasswordProgressBar } from "./passwordProgressBar";
-import { FaRegCircleQuestion } from "react-icons/fa6";
-import { PasswordRuleTooltip } from "./passwordRuleTooltip";
-import { Link } from "react-router-dom";
 import { MdCancel } from "react-icons/md";
 
 export const LoginForm = ({
@@ -23,11 +17,15 @@ export const LoginForm = ({
     handleSubmit,
     watch,
     formState: { errors },
+    setValue,
   } = useForm();
 
-  const usernameInput = watch("username");
-  const passwordInput = watch("password");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Update form value when loginType changes
+  useEffect(() => {
+    setValue("loginType", loginType);
+  }, [loginType, setValue]);
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -53,7 +51,7 @@ export const LoginForm = ({
           <div className="flex gap-5">
             <div className="flex items-center gap-2">
               <input
-                {...register("signupType")}
+                {...register("loginType")} // Add name attribute
                 id="password"
                 type="radio"
                 value="password"
@@ -65,7 +63,7 @@ export const LoginForm = ({
 
             <div className="flex items-center gap-2">
               <input
-                {...register("signupType")}
+                {...register("loginType")} // Add name attribute
                 id="otp"
                 type="radio"
                 value="otp"
@@ -77,9 +75,10 @@ export const LoginForm = ({
           </div>
         </div>
 
-        {loginType === "otp" ? (
+        {/* If Login type is OTP */}
+        <Activity mode={loginType === "otp" ? "visible" : "hidden"}>
           <div className="flex flex-col gap-3">
-            {/* Row 4 */}
+            {/* Row 2 */}
             <div className="grow flex justify-between gap-2">
               {/* Mobile Prefix */}
               <div className="basis-[20%]">
@@ -88,7 +87,8 @@ export const LoginForm = ({
                 </label>
                 <input
                   {...register("mobilePrefix", {
-                    required: "This field is required",
+                    required:
+                      loginType === "otp" ? "This field is required" : false,
                   })}
                   type="text"
                   className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -108,7 +108,8 @@ export const LoginForm = ({
                 </label>
                 <input
                   {...register("mobileNumber", {
-                    required: "This field is required",
+                    required:
+                      loginType === "otp" ? "This field is required" : false,
                   })}
                   type="text"
                   className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -126,6 +127,7 @@ export const LoginForm = ({
               <p className="text-center">OR</p>
             </div>
 
+            {/* Row 3 */}
             <div>
               <label htmlFor="email" className="sr-only">
                 Email Id
@@ -133,7 +135,8 @@ export const LoginForm = ({
               <div className="relative">
                 <input
                   {...register("email", {
-                    required: "Email Id is required",
+                    required:
+                      loginType === "otp" ? "Email Id is required" : false,
                   })}
                   type="text"
                   className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
@@ -147,31 +150,37 @@ export const LoginForm = ({
               )}
             </div>
           </div>
-        ) : (
+        </Activity>
+
+        {/* If Login type is Password */}
+        <Activity mode={loginType === "password" ? "visible" : "hidden"}>
           <div className="flex flex-col gap-5">
             {/* Row 4 */}
             <div>
-              <label htmlFor="username" className="sr-only">
+              <label htmlFor="userData" className="sr-only">
                 Username
               </label>
               <div className="relative">
                 <input
-                  {...register("username", {
-                    required: "Username is required",
+                  {...register("userData", {
+                    required:
+                      loginType === "password"
+                        ? "This field is required"
+                        : false,
                   })}
                   type="text"
                   className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Username, Email, Mobile no..."
                 />
               </div>
-              {errors.username && (
+              {errors.userData && (
                 <p className="text-red-500 text-sm mt-1 text-left">
-                  {errors.username.message}
+                  {errors.userData.message}
                 </p>
               )}
             </div>
 
-            {/* Row 5 - Password Field with Enhanced UI */}
+            {/* Row 5 */}
             <div>
               <div className="relative">
                 <label htmlFor="password" className="sr-only">
@@ -179,7 +188,8 @@ export const LoginForm = ({
                 </label>
                 <input
                   {...register("password", {
-                    required: "Password is required",
+                    required:
+                      loginType === "password" ? "Password is required" : false,
                   })}
                   type={showPassword ? "text" : "password"}
                   className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-20"
@@ -188,17 +198,19 @@ export const LoginForm = ({
 
                 {/* Password Visibility Toggle */}
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {showPassword ? (
+                  <Activity mode={showPassword ? "visible" : "hidden"}>
                     <IoIosEye
                       className="cursor-pointer w-5 h-5 text-gray-400 hover:text-blue-500 transition-colors"
                       onClick={() => setShowPassword(false)}
                     />
-                  ) : (
+                  </Activity>
+
+                  <Activity mode={!showPassword ? "visible" : "hidden"}>
                     <IoIosEyeOff
                       className="cursor-pointer w-5 h-5 text-gray-400 hover:text-blue-500 transition-colors"
                       onClick={() => setShowPassword(true)}
                     />
-                  )}
+                  </Activity>
                 </div>
               </div>
               {errors.password && (
@@ -208,7 +220,7 @@ export const LoginForm = ({
               )}
             </div>
           </div>
-        )}
+        </Activity>
       </div>
 
       <div>
@@ -217,7 +229,7 @@ export const LoginForm = ({
           disabled={loading}
           className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
         >
-          {loading ? "Signing up..." : "Sign up"}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </div>
     </form>

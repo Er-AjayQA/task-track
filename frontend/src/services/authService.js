@@ -47,7 +47,7 @@ export const authServices = {
 
   // *********** Login With Password Service *********** //
   loginWithPassword: async (loginData) => {
-    return (await API.put("/login-with-password", loginData)).data;
+    return (await API.post("/login-with-password", loginData)).data;
   },
 
   // *********** Logout Service *********** //
