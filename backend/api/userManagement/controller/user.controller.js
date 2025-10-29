@@ -155,7 +155,6 @@ module.exports.userSignup = async (req, res) => {
 module.exports.sendOtp = async (req, res) => {
   const { mobileNumber, mobilePrefix, email } = req.body;
   let user = "";
-  let { userId } = req.user;
 
   const transaction = await db.sequelize.transaction();
 
@@ -164,7 +163,13 @@ module.exports.sendOtp = async (req, res) => {
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     user = await db.um_user_master.findOne({
-      where: { id: userId },
+      where: {
+        [db.Sequelize.Op.or]: [
+          { email: email },
+          { mobilePrefix: mobilePrefix },
+          { mobileNumber: mobileNumber },
+        ],
+      },
       transaction,
     });
 
@@ -311,7 +316,7 @@ module.exports.loginOtpVerification = async (req, res) => {
       await user.save({ transaction });
     }
 
-    token = generateToken(user.id); // Saving token
+    token = await generateToken(user.id); // Saving token
     res.cookie("auth_token", token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 365,

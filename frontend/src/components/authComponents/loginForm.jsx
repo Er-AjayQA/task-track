@@ -11,6 +11,7 @@ export const LoginForm = ({
   error,
   loginType,
   setLoginType,
+  formType,
 }) => {
   const {
     register,
@@ -20,7 +21,15 @@ export const LoginForm = ({
     setValue,
   } = useForm();
 
+  const mobilePrefixInput = watch("mobilePrefix");
+  const mobileNumberInput = watch("mobileNumber");
+  const emailInput = watch("email");
   const [showPassword, setShowPassword] = useState(false);
+  const hasMobilePrefix =
+    mobilePrefixInput && mobilePrefixInput.trim().length > 0;
+  const hasMobileNumber =
+    mobileNumberInput && mobileNumberInput.trim().length > 0;
+  const hasEmail = emailInput && emailInput.trim().length > 0;
 
   // Update form value when loginType changes
   useEffect(() => {
@@ -88,9 +97,12 @@ export const LoginForm = ({
                 <input
                   {...register("mobilePrefix", {
                     required:
-                      loginType === "otp" ? "This field is required" : false,
+                      loginType === "otp" && !hasEmail
+                        ? "This field is required"
+                        : false,
                   })}
                   type="text"
+                  disabled={hasEmail}
                   className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="+91"
                 />
@@ -109,9 +121,12 @@ export const LoginForm = ({
                 <input
                   {...register("mobileNumber", {
                     required:
-                      loginType === "otp" ? "This field is required" : false,
+                      loginType === "otp" && !hasEmail
+                        ? "This field is required"
+                        : false,
                   })}
                   type="text"
+                  disabled={hasEmail}
                   className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Mobile no..."
                 />
@@ -136,9 +151,14 @@ export const LoginForm = ({
                 <input
                   {...register("email", {
                     required:
-                      loginType === "otp" ? "Email Id is required" : false,
+                      loginType === "otp" &&
+                      !hasMobilePrefix &&
+                      !hasMobileNumber
+                        ? "Email Id is required"
+                        : false,
                   })}
                   type="text"
+                  disabled={hasMobilePrefix || hasMobileNumber}
                   className="w-full appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
                   placeholder="Enter email id..."
                 />
@@ -224,13 +244,51 @@ export const LoginForm = ({
       </div>
 
       <div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+        <Activity
+          mode={
+            formType === "login" && loginType === "password"
+              ? "visible"
+              : "hidden"
+          }
         >
-          {loading ? "Logging in..." : "Login"}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </Activity>
+
+        <Activity
+          mode={
+            formType === "login" && loginType === "otp" ? "visible" : "hidden"
+          }
+        >
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? "Sending..." : "Send OTP"}
+          </button>
+        </Activity>
+
+        <Activity
+          mode={
+            formType === "verifyOtp" && loginType === "otp"
+              ? "visible"
+              : "hidden"
+          }
+        >
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? "Verifying..." : "Verify & Login"}
+          </button>
+        </Activity>
       </div>
     </form>
   );

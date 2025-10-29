@@ -11,7 +11,6 @@ export const VerifyLoginOtpForm = ({
   error,
   onBack,
   handleResendOtp,
-  contactInfo,
 }) => {
   const {
     register,
@@ -31,7 +30,7 @@ export const VerifyLoginOtpForm = ({
             <div className="flex items-center gap-2">
               <MdCancel fill="red" />
               <h3 className="text-sm font-medium text-red-800">
-                Signup failed
+                SignIn failed
               </h3>
             </div>
 
@@ -135,7 +134,7 @@ export const VerifyLoginOtpForm = ({
             disabled={loading}
             className="w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200 cursor-pointer"
           >
-            Back to Sign Up
+            Back to Login
           </button>
         )}
 

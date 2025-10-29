@@ -70,6 +70,11 @@ export const LoginPage = () => {
         email: formData?.email || null,
       };
 
+      // Store user data for OTP verification
+      setUserEmail(formData?.email || null);
+      setUserMobilePrefix(formData?.mobilePrefix || null);
+      setUserMobileNumber(formData?.mobileNumber || null);
+
       const response = await authServices.sendOtp(payload);
 
       if (response?.success) {
@@ -84,7 +89,6 @@ export const LoginPage = () => {
       const errorMessage =
         error.response?.data?.message || "Login failed. Please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -100,7 +104,8 @@ export const LoginPage = () => {
         mobileNumber: userMobileNumber,
         mobilePrefix: userMobilePrefix,
         email: userEmail,
-        otp: formData.otp,
+        otp: formData?.otp,
+        agreedToTerms: false,
       };
 
       // Validate OTP payload
@@ -109,11 +114,12 @@ export const LoginPage = () => {
         return;
       }
 
-      const response = await authServices.verifySignupOtp(payload);
+      const response = await authServices.verifyLoginOtp(payload);
 
       if (response?.success) {
-        toast.success(response?.message || "Account verified successfully!");
-        navigate("/task-track/login", { replace: true });
+        toast.success(response?.message || "Login successfully!");
+        login(response?.data?.user, response?.data?.token);
+        navigate("/task-track/dashboard", { replace: true });
         resetFormState();
       } else {
         setError(
@@ -125,7 +131,6 @@ export const LoginPage = () => {
         error.response?.data?.message ||
         "OTP verification failed. Please try again.";
       setError(errorMessage);
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -142,8 +147,8 @@ export const LoginPage = () => {
     }
   };
 
-  // Handle back to signup from OTP verification
-  const handleBackToSignup = () => {
+  // Handle back to Login from OTP verification
+  const handleBackToLogin = () => {
     resetFormState();
   };
 
@@ -193,11 +198,17 @@ export const LoginPage = () => {
                 Signup here
               </Link>
             ) : (
-              <span>
-                {loginType === "password"
-                  ? userEmail
-                  : `${userMobilePrefix}${userMobileNumber}`}
-              </span>
+              <>
+                {userEmail ? (
+                  <span className="font-medium">{userEmail}</span>
+                ) : userMobilePrefix && userMobileNumber ? (
+                  <span className="font-medium">
+                    {userMobilePrefix}-{userMobileNumber}
+                  </span>
+                ) : (
+                  <span>your contact information</span>
+                )}
+              </>
             )}
           </p>
         </div>
@@ -209,6 +220,7 @@ export const LoginPage = () => {
             error={error}
             loginType={loginType}
             setLoginType={setLoginType}
+            formType={formType}
           />
         )}
 
@@ -217,13 +229,8 @@ export const LoginPage = () => {
             onSubmit={handleFormSubmit}
             loading={loading}
             error={error}
-            onBack={handleBackToSignup}
+            onBack={handleBackToLogin}
             handleResendOtp={handleResendOtp}
-            contactInfo={
-              loginType === "email"
-                ? userEmail
-                : `${userMobilePrefix}${userMobileNumber}`
-            }
           />
         )}
       </div>
